@@ -12,8 +12,8 @@ from .serializers import StudentSerializer, AuthDataSerializer, HelloWorldSerial
 
 class HelloWorldView(APIView):
     def get(self, request):
-        data = {"message": "Hello World!"}
-        return Response(data, status=status.HTTP_200_OK)
+        data = "Hello World!"
+        return Response(data, status=status.HTTP_200_OK, content_type='text/plain')
 
 
 class AuthorizeView(APIView):
@@ -22,7 +22,8 @@ class AuthorizeView(APIView):
         if serializer.is_valid():
             # TODO: Przykładowe tokeny, należy dodać własną autoryzację
             refresh = RefreshToken.for_user(request.user)
-            return Response({"token": str(refresh.access_token)}, status=status.HTTP_200_OK)
+            token = str(refresh.access_token)
+            return Response(token, status=status.HTTP_200_OK, content_type='text/plain')
         return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -34,18 +35,18 @@ class StudentListView(APIView):
         try:
             results = int(results)
         except ValueError:
-            return Response({"error": "Invalid 'results' parameter"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid 'results' parameter"}, status=status.HTTP_400_BAD_REQUEST, content_type='application/json')
 
         students = Student.objects.all()[:results]
         serializer = StudentSerializer(students, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK, content_type='application/json')
 
     def post(self, request):
         serializer = StudentSerializer(data=request.data, many=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, content_type='application/json')
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST, content_type='application/json')
 
 
 class StudentDetailView(APIView):
@@ -60,8 +61,8 @@ class StudentDetailView(APIView):
         serializer = StudentSerializer(student, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_200_OK, content_type='application/json')
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST, content_type='application/json')
 
     def patch(self, request, studentId):
         try:
@@ -72,8 +73,8 @@ class StudentDetailView(APIView):
         serializer = StudentSerializer(student, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_200_OK, content_type='application/json')
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST, content_type='application/json')
 
     def delete(self, request, studentId):
         try:
