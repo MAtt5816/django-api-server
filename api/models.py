@@ -32,3 +32,11 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+class User(models.Model):
+    username = models.CharField(max_length=50)
+    salt = models.CharField(max_length=20)
+    sha256 = models.CharField(max_length=256)
+
+    class Meta:
+        db_table = 'users'

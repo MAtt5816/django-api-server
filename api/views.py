@@ -6,8 +6,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Student
+from .models import Student, User
 from .serializers import StudentSerializer, AuthDataSerializer, HelloWorldSerializer, JwtTokenSerializer
+import hashlib
 
 
 class HelloWorldView(APIView):
@@ -20,8 +21,19 @@ class AuthorizeView(APIView):
     def post(self, request):
         serializer = AuthDataSerializer(data=request.data)
         if serializer.is_valid():
-            # TODO: Przykładowe tokeny, należy dodać własną autoryzację
-            refresh = RefreshToken.for_user(request.user)
+            if User.objects.filter(username=serializer.data['username']).exists():
+                user = User.objects.get(username=serializer.data['username'])
+            else:
+                user = None
+
+            if user is None:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+            hash = hashlib.sha256((serializer.data['passphrase'] + user.salt).encode('UTF8'))
+            if user.sha256 != hash.hexdigest():
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+            refresh = RefreshToken.for_user(user)
             token = str(refresh.access_token)
             return Response(token, status=status.HTTP_200_OK, content_type='text/plain')
         return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
